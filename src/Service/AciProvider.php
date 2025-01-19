@@ -8,11 +8,11 @@ use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 
 class AciProvider implements PaymentProviderInterface
 {
-    private const PAYMENTS_URL = 'https://eu-test.oppwa.com/v1/payments';
-    private const BEARER_TOKEN = 'OGFjN2E0Yzc5Mzk0YmRjODAxOTM5NzM2ZjFhNzA2NDF8Ulh5az9pd2ZNdXprRVpRYjdFcWs=';
-    private const ENTITY_ID = '8ac7a4c79394bdc801939736f17e063d';
-    private const PAYMENT_TYPE = 'DB';
-    private const CARD_HOLDER = 'Jane Jones';
+    public const PAYMENTS_URL = 'https://eu-test.oppwa.com/v1/payments';
+    public const BEARER_TOKEN = 'OGFjN2E0Yzc5Mzk0YmRjODAxOTM5NzM2ZjFhNzA2NDF8Ulh5az9pd2ZNdXprRVpRYjdFcWs=';
+    public const ENTITY_ID = '8ac7a4c79394bdc801939736f17e063d';
+    public const PAYMENT_TYPE = 'DB';
+    public const CARD_HOLDER = 'Jane Jones';
 
     private HttpClientInterface $httpClient;
 

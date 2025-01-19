@@ -8,10 +8,10 @@ use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 
 class Shift4Provider implements PaymentProviderInterface
 {
-    private const API_KEY = 'sk_test_z4q5bEwnAoaCj0bMFsMSUf77';
-    private const CUSTOMER_ID = 'cust_FM5N8zuLuDMEDfjQ3Iwrrzvo';
-    private const CHARGES_URL = 'https://api.shift4.com/charges';
-    private const TOKENS_URL = 'https://api.shift4.com/tokens';
+    public const API_KEY = 'sk_test_z4q5bEwnAoaCj0bMFsMSUf77';
+    public const CUSTOMER_ID = 'cust_FM5N8zuLuDMEDfjQ3Iwrrzvo';
+    public const CHARGES_URL = 'https://api.shift4.com/charges';
+    public const TOKENS_URL = 'https://api.shift4.com/tokens';
 
     private HttpClientInterface $httpClient;
 
