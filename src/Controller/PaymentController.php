@@ -2,70 +2,64 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use JsonException;
+use RuntimeException;
+use InvalidArgumentException;
+use App\Service\PaymentService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Service\PaymentService;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-/**
- * Handles payment-related operations for various providers.
- */
 class PaymentController extends AbstractController
 {
+    private PaymentService $paymentService;
+
+    public function __construct(PaymentService $paymentService)
+    {
+        $this->paymentService = $paymentService;
+    }
+
     /**
      * Processes a payment request for the specified provider.
      *
-     * @param string $provider The payment provider (e.g., "shift4", "aci").
-     * @param Request $request The HTTP request object containing JSON payload.
-     * @param PaymentService $paymentService The service to process the payment.
-     *
-     * @return JsonResponse JSON response with the result of the payment processing.
+     * @param string $provider The payment provider (aci or shift4).
+     * @param Request $request The incoming HTTP request.
+     * @return JsonResponse
      */
     #[Route('/app/payment/{provider}', name: 'app_payment', methods: ['POST'])]
-    public function handlePayment(string $provider, Request $request, PaymentService $paymentService): JsonResponse
+    public function handlePayment(string $provider, Request $request): JsonResponse
     {
-        // Parse and validate the JSON request body
         try {
-            $params = $request->toArray(); // Decodes JSON payload
-        } catch (\JsonException $e) {
-            return $this->json(
-                ['error' => 'Invalid JSON payload', 'details' => $e->getMessage()],
-                JsonResponse::HTTP_BAD_REQUEST
-            );
-        }
+            // Parse the request body to an array
+            $params = $request->toArray();
 
-        // Validate required parameters
-        if (empty($params['amount']) || empty($params['currency'])) {
-            return $this->json(
-                ['error' => 'Missing required fields: amount and/or currency'],
-                JsonResponse::HTTP_BAD_REQUEST
-            );
-        }
+            // Check if required parameters are provided
+            if (!isset($params['amount']) || !isset($params['currency'])) {
+                return new JsonResponse(['error' => 'Amount and currency are required.'], 400);
+            }
 
-        try {
-            // Process the payment via the specified provider
-            $response = $paymentService->processPayment($provider, $params);
+            // Process the payment through the PaymentService
+            $response = $this->paymentService->processPayment($provider, $params);
 
-            return $this->json(
-                ['message' => 'Payment processed successfully', 'data' => $response],
-                JsonResponse::HTTP_OK
-            );
-        } catch (\InvalidArgumentException $e) {
-            return $this->json(
-                ['error' => 'Invalid argument provided', 'details' => $e->getMessage()],
-                JsonResponse::HTTP_BAD_REQUEST
-            );
-        } catch (\RuntimeException $e) {
-            return $this->json(
-                ['error' => 'Payment processing failed', 'details' => $e->getMessage()],
-                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
-            );
+            // Return the successful response with payment data
+            return new JsonResponse([
+                'message' => 'Payment processed successfully.',
+                'data' => $response,
+            ]);
+
+        } catch (JsonException $e) {
+            // Handle invalid JSON input
+            return new JsonResponse(['error' => 'Invalid JSON in request.'], 400);
+        } catch (InvalidArgumentException $e) {
+            // Handle invalid provider or missing parameters
+            return new JsonResponse(['error' => $e->getMessage()], 400);
+        } catch (RuntimeException $e) {
+            // Handle issues during payment processing
+            return new JsonResponse(['error' => 'Error occurred while processing payment: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            return $this->json(
-                ['error' => 'An unexpected error occurred', 'details' => $e->getMessage()],
-                JsonResponse::HTTP_INTERNAL_SERVER_ERROR
-            );
+            // Catch any unexpected errors
+            return new JsonResponse(['error' => 'An unexpected error occurred.'], 500);
         }
     }
 }
