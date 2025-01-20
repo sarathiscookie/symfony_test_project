@@ -1,45 +1,29 @@
 # Use official PHP 8.2 image as base
 FROM php:8.2-apache
+#FROM php:apache
 
-# Install system dependencies for PHP extensions
-RUN apt-get update && apt-get install -y \
-    git \
-    zip \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libicu-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    && rm -rf /var/lib/apt/lists/*
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Install and enable PHP extensions required for Symfony
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install zip pdo pdo_mysql intl gd
-
-# Enable Apache mod_rewrite
+#Install Packages
+RUN apt-get -y update && apt-get install -y libicu-dev libzip-dev zip libjpeg-dev libpng-dev libfreetype6-dev git
+RUN docker-php-ext-configure intl
+RUN docker-php-ext-configure gd '--with-jpeg' '--with-freetype'
+RUN docker-php-ext-install intl opcache pdo_mysql zip gd
+RUN pecl install xdebug
 RUN a2enmod rewrite
 
-# Set working directory inside container
-WORKDIR /var/www
+#INSTALL APCU
+RUN pecl install apcu-5.1.24 && docker-php-ext-enable apcu
+RUN echo "extension=apcu.so" > /usr/local/etc/php/php.ini
+RUN echo "apc.enable_cli=1" > /usr/local/etc/php/php.ini
+RUN echo "apc.enable=1" > /usr/local/etc/php/php.ini
+#APCU
 
-# Copy Symfony project files into the container
-COPY . /var/www
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN curl -sS https://get.symfony.com/cli/installer | bash && mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
 
-# Copy Composer from the official Composer image and install dependencies
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Install Composer dependencies (run as the superuser in Docker)
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-scripts --no-autoloader
-
-# Expose the port the app runs on
-EXPOSE 80
-
-# Change Apache document root to Symfony's public directory
-RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
-
-# Set correct permissions for Symfony files (adjust as necessary)
-RUN chown -R www-data:www-data /var/www
-
-# Start Apache in the foreground
-CMD ["apache2-foreground"]
+# Install NVM
+RUN curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash

@@ -1,17 +1,15 @@
 version: '3.8'
 
 services:
-  app:
+  php-apache:
     build: .
     container_name: symfony_app
     volumes:
-      - .:/var/www/symfony
+      - .:/var/www/html
     ports:
-      - "8080:80"
+      - "8081:80"
     networks:
       - symfony_network
-    environment:
-      - SYMFONY_ENV=prod
 
 networks:
   symfony_network:
