@@ -26,9 +26,9 @@ class Shift4ProviderTest extends TestCase
         $responseData = [
             'id' => 'transaction123',
             'created' => '2025-01-01T12:00:00Z',
-            'amount' => 100,
+            'amount' => '490',
             'currency' => 'USD',
-            'card' => ['first6' => '123456']
+            'card' => ['first6' => '424242']
         ];
 
         $this->httpClient->setResponseFactory(function () use ($responseData) {
@@ -36,11 +36,11 @@ class Shift4ProviderTest extends TestCase
         });
 
         $params = [
-            'amount' => 100,
+            'amount' => '490',
             'currency' => 'USD',
-            'number' => '4111111111111111',
-            'expMonth' => 12,
-            'expYear' => 2025,
+            'number' => '4242424242424242',
+            'expMonth' => '11',
+            'expYear' => '2028',
             'cvc' => '123'
         ];
 
@@ -49,9 +49,9 @@ class Shift4ProviderTest extends TestCase
         $this->assertArrayHasKey('transactionId', $response);
         $this->assertEquals('transaction123', $response['transactionId']);
         $this->assertEquals('01.01.25 12:00:00', $response['created']);
-        $this->assertEquals(100, $response['amount']);
+        $this->assertEquals('490', $response['amount']);
         $this->assertEquals('USD', $response['currency']);
-        $this->assertEquals('123456', $response['cardBin']);
+        $this->assertEquals('424242', $response['cardBin']);
     }
 
     public function testProcessPaymentFailure()
@@ -61,11 +61,11 @@ class Shift4ProviderTest extends TestCase
         });
 
         $params = [
-            'amount' => 100,
+            'amount' => '490',
             'currency' => 'USD',
-            'number' => '4111111111111111',
-            'expMonth' => 12,
-            'expYear' => 2025,
+            'number' => '4242424242424242',
+            'expMonth' => '11',
+            'expYear' => '2028',
             'cvc' => '123'
         ];
 
@@ -76,7 +76,7 @@ class Shift4ProviderTest extends TestCase
     public function testValidateParamsMissingField()
     {
         $params = [
-            'amount' => 100,
+            'amount' => '490',
             'currency' => 'USD'
         ];
 

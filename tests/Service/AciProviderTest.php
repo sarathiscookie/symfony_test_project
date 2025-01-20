@@ -26,9 +26,9 @@ class AciProviderTest extends TestCase
         $responseData = [
             'id' => 'payment123',
             'timestamp' => '2025-01-01T12:00:00Z',
-            'amount' => 100,
-            'currency' => 'USD',
-            'card' => ['bin' => '123456']
+            'amount' => '92.00',
+            'currency' => 'EUR',
+            'card' => ['bin' => '411111']
         ];
 
         $this->httpClient->setResponseFactory(function () use ($responseData) {
@@ -36,11 +36,11 @@ class AciProviderTest extends TestCase
         });
 
         $params = [
-            'amount' => 100,
+            'amount' => '92.00',
             'currency' => 'USD',
             'card.number' => '4111111111111111',
-            'card.expiryMonth' => 12,
-            'card.expiryYear' => 2025,
+            'card.expiryMonth' => '12',
+            'card.expiryYear' => '2025',
             'card.cvv' => '123'
         ];
 
@@ -49,9 +49,9 @@ class AciProviderTest extends TestCase
         $this->assertArrayHasKey('transactionId', $response);
         $this->assertEquals('payment123', $response['transactionId']);
         $this->assertEquals('01.01.25 12:00:00', $response['created']);
-        $this->assertEquals(100, $response['amount']);
-        $this->assertEquals('USD', $response['currency']);
-        $this->assertEquals('123456', $response['cardBin']);
+        $this->assertEquals('92.00', $response['amount']);
+        $this->assertEquals('EUR', $response['currency']);
+        $this->assertEquals('411111', $response['cardBin']);
     }
 
     public function testProcessPaymentFailure()
@@ -61,11 +61,11 @@ class AciProviderTest extends TestCase
         });
 
         $params = [
-            'amount' => 100,
+            'amount' => '92.00',
             'currency' => 'USD',
             'card.number' => '4111111111111111',
-            'card.expiryMonth' => 12,
-            'card.expiryYear' => 2025,
+            'card.expiryMonth' => '12',
+            'card.expiryYear' => '2025',
             'card.cvv' => '123'
         ];
 
@@ -76,7 +76,7 @@ class AciProviderTest extends TestCase
     public function testValidateParamsMissingField()
     {
         $params = [
-            'amount' => 100,
+            'amount' => '92.00',
             'currency' => 'USD'
         ];
 
