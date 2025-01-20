@@ -2,7 +2,7 @@
 
 namespace App\Tests\Service;
 
-use App\Service\Shift4Provider;
+use App\Service\AciProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
@@ -10,25 +10,25 @@ use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
-class Shift4ProviderTest extends TestCase
+class AciProviderTest extends TestCase
 {
-    private Shift4Provider $shift4Provider;
+    private AciProvider $aciProvider;
     private MockHttpClient $httpClient;
 
     protected function setUp(): void
     {
         $this->httpClient = new MockHttpClient();
-        $this->shift4Provider = new Shift4Provider($this->httpClient);
+        $this->aciProvider = new AciProvider($this->httpClient);
     }
 
     public function testProcessPaymentSuccess()
     {
         $responseData = [
-            'id' => 'transaction123',
-            'created' => '2025-01-01T12:00:00Z',
+            'id' => 'payment123',
+            'timestamp' => '2025-01-01T12:00:00Z',
             'amount' => 100,
             'currency' => 'USD',
-            'card' => ['first6' => '123456']
+            'card' => ['bin' => '123456']
         ];
 
         $this->httpClient->setResponseFactory(function () use ($responseData) {
@@ -38,16 +38,16 @@ class Shift4ProviderTest extends TestCase
         $params = [
             'amount' => 100,
             'currency' => 'USD',
-            'number' => '4111111111111111',
-            'expMonth' => 12,
-            'expYear' => 2025,
-            'cvc' => '123'
+            'card.number' => '4111111111111111',
+            'card.expiryMonth' => 12,
+            'card.expiryYear' => 2025,
+            'card.cvv' => '123'
         ];
 
-        $response = $this->shift4Provider->processPayment($params);
+        $response = $this->aciProvider->processPayment($params);
 
         $this->assertArrayHasKey('transactionId', $response);
-        $this->assertEquals('transaction123', $response['transactionId']);
+        $this->assertEquals('payment123', $response['transactionId']);
         $this->assertEquals('01.01.25 12:00:00', $response['created']);
         $this->assertEquals(100, $response['amount']);
         $this->assertEquals('USD', $response['currency']);
@@ -63,14 +63,14 @@ class Shift4ProviderTest extends TestCase
         $params = [
             'amount' => 100,
             'currency' => 'USD',
-            'number' => '4111111111111111',
-            'expMonth' => 12,
-            'expYear' => 2025,
-            'cvc' => '123'
+            'card.number' => '4111111111111111',
+            'card.expiryMonth' => 12,
+            'card.expiryYear' => 2025,
+            'card.cvv' => '123'
         ];
 
         $this->expectException(\RuntimeException::class);
-        $this->shift4Provider->processPayment($params);
+        $this->aciProvider->processPayment($params);
     }
 
     public function testValidateParamsMissingField()
@@ -81,6 +81,6 @@ class Shift4ProviderTest extends TestCase
         ];
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->shift4Provider->processPayment($params);
+        $this->aciProvider->processPayment($params);
     }
 }
